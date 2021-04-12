@@ -3,15 +3,17 @@ var Jimp = require('jimp');
 const app = express();
 
 app.get('/', (req, res) => {
-	if (!req.query.q){
+	if (!req.query.q || !/^(?:http|https)\:\/\/.+\..+/.test(req.query.q)){
 		res.json({error: "No image provided, provide one through a 'q' parameter."});
 		// Because it returns, theoretically no error.
 		// Wait, I'm going to make a git repo, then you can just edit this
 		return;
 	}
 	// Read file from ?q url, and account for cors through my proxy
-  Jimp.read("https://cors.explosionscratc.repl.co/" + req.query.q.replace(/^(?:http|https)\:\/\//, ""))
+	// Remove "http "
+  Jimp.read(req.query.q)
   .then(async (image) => {
+		// Use req.query's to alter the image using Jimp.
 		if (req.query.width || req.query.height){
 			let mode = req.query.mode || req.query["resize-mode"];
 			if (mode === "cover"){
@@ -93,7 +95,7 @@ app.get('/', (req, res) => {
 			image.scaleToFit(...req.query.scaleToFit.split(",").slice(0,2).map(i => +i))
 		}
 		if (req.query.pixelate){
-			image.pixelate(...req.query.pixelate.split(",").map(i => +i))
+			image.pixelate(...req.query.pixelate.split(",").map(i => +i).slice(0,4))
 		}
 		if (req.query.opaque){
 			image.opaque();
